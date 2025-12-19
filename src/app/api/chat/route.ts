@@ -205,7 +205,8 @@ export async function POST(req: Request) {
             chatId: finalChatId,
             reply: text,
             originalMap,
-            findings
+            findings,
+            debugUrl: (await PIIService.anonymize(message)).debugUrl // Get URL from service
         });
 
     } catch (err: any) {
