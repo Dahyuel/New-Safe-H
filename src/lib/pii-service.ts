@@ -10,6 +10,7 @@ export interface PIIResult {
     anonymizedText: string;
     originalMap: Record<string, string>; // placeholder -> original value
     findings: PIIType[];
+    debugUrl?: string;
 }
 
 // Regex Patterns (Fallback)
@@ -41,7 +42,8 @@ export class PIIService {
         }
         // Server side (Node.js) requires absolute URL
         if (process.env.VERCEL_URL) {
-            return `https://${process.env.VERCEL_URL}/api/anonymize`;
+            // Use the custom domain explicitly to ensure routing works
+            return "https://safeharbour.nilebyte.info/api/anonymize";
         }
         return "http://127.0.0.1:5000/anonymize"; // Local fallback
     }
@@ -63,9 +65,11 @@ export class PIIService {
                     originalMap: data.originalMap,
                     findings: data.findings
                 };
+            } else {
+                console.error(`Presidio Backend Error: ${response.status} ${response.statusText}`, await response.text());
             }
         } catch (e) {
-            console.warn("Presidio Backend failed/unreachable. Falling back to Regex.", e);
+            console.error("Presidio Backend failed/unreachable. Falling back to Regex.", e);
         }
 
         // 2. Fallback to Regex Logic
@@ -112,7 +116,8 @@ export class PIIService {
         return {
             anonymizedText,
             originalMap,
-            findings: Array.from(findings)
+            findings: Array.from(findings),
+            debugUrl: PIIService.getAnonymizeUrl() // Log URL for debugging
         };
     }
 
