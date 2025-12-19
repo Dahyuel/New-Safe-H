@@ -22,7 +22,23 @@ anonymizer = AnonymizerEngine()
 import io
 from pypdf import PdfReader
 
+@app.before_request
+def log_request_info():
+    print(f"Incoming Request: {request.method} {request.path}")
+    print(f"Headers: {request.headers}")
+
+@app.route('/', methods=['GET'])
+@app.route('/api/index', methods=['GET'])
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        "status": "active", 
+        "path_received": request.path,
+        "method": request.method
+    })
+
 @app.route('/extract-text', methods=['POST'])
+@app.route('/api/extract-text', methods=['POST'])
 def extract_text():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400
@@ -47,6 +63,7 @@ def extract_text():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/anonymize', methods=['POST'])
+@app.route('/api/anonymize', methods=['POST'])
 def anonymize():
     data = request.json
     text = data.get('text', '')
